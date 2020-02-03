@@ -3,14 +3,14 @@ exports.up = function (knex) {
     // the cahnge we want to make to our schema
     return knex.schema.createTable('cars', tbl => {
         tbl.increments();
-        tbl.text('VIN')
+        tbl.integer('VIN')
             .unique()
             .notNullable();
         tbl.text('make')
             .notNullable();
         tbl.text('model')
             .notNullable();
-        tbl.text('mileage')
+        tbl.integer('mileage')
             .notNullable();
         tbl.text('transmissionType');
         tbl.text('titleStatus');
