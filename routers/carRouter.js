@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET by id
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateId, async (req, res) => {
     const { id } = req.params;
     try {
         const [car] = await db('cars').where('id', id);
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
 })
 
 // UPDATE by id
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateId, async (req, res) => {
     const { id } = req.params;
     try {
         const rowsUpdated = await db('cars')
@@ -48,7 +48,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE by id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateId, async (req, res) => {
     const { id } = req.params;
     try {
         const rowsDeleted = await db('cars')
@@ -60,5 +60,53 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+function intToBoolean(int) {
+    return int === 1 ? true : false;
+}
+
+function carToBody(car) {
+    return {
+        ...car,
+        completed: intToBoolean(car.completed),
+    };
+}
+
+function get(id) {
+    let query = db("cars");
+
+    if (id) {
+        return query
+            .where("id", id)
+            .first()
+            .then(car => {
+                if (car) {
+                    return carToBody(car);
+                } else {
+                    return null;
+                }
+            });
+    } else {
+        return query.then(cars => {
+            return cars.map(car => carToBody(car));
+        });
+    }
+}
+
+function validateId(req, res, next) {
+    const { id } = req.params;
+    get(id)
+        .then(car => {
+            if (car) {
+                req.id = id;
+                next();
+            } else {
+                res.status(400).json({ message: "No car with that ID was found" });
+            }
+        })
+        .catch(err => {
+            console.log("validateId error: ", err);
+            res.status(500).json(err.message);
+        });
+};
 
 module.exports = router;
